@@ -52,14 +52,14 @@ auto Spp3::_step2() -> int {
   if(s_ == n_) return 10; // goto Step 10
   i_ = sigma_[s_];
   ++s_;
-  bl_ = Point3(INF, INF, INF);
+  bl_ = Vector(INF, INF, INF); // Position
   lf_ = 0;
   lb_ = 0;
   jf_ = nf_[lf_];
   jb_ = nb_[lb_];
   //jb_->print();
   floor_ = 0;
-  interim_bl_ = Point3(INF, INF, INF);
+  interim_bl_ = Vector(INF, INF, INF); // Position
   x_end_ = container_back_surface_.x + container_back_surface_.w - i_->w;
   y_end_ = container_back_surface_.y + container_back_surface_.h - i_->h;
   return 3;
@@ -140,7 +140,7 @@ auto Spp3::_step6() -> int {
 auto Spp3::_step7() -> int {
   //if(_make_nfp(nf_[lf_ + 1], i_)->front_surface().get_point() < bl_) {
   if(nf_.size() <= lf_ - 1 &&
-     _make_nfp(nf_[lf_ + 1], i_)->front_surface().get_point() < bl_) {
+     _make_nfp(nf_[lf_ + 1], i_)->front_surface().get_position() < bl_) {
     ++lf_;
     //std::cout << "lf: " << lb_ << std::endl;
     //std::cout << "jf[lf]" << std::flush;
@@ -164,7 +164,7 @@ auto Spp3::_step8() -> int {
 }
 
 auto Spp3::_step9() -> int {
-  i_->set_point(bl_);
+  i_->set_position(bl_);
   //i_->print();
   placed_.insert(i_);
   nf_.insert(i_);
@@ -181,7 +181,7 @@ auto Spp3::_step10() -> int {
 }
 
 auto Spp3::_find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
-                       Rectangular const& surface) const -> Point3 {
+                       Rectangular const& surface) const -> Vector {
   //_print_status();
   //std::cout << "surface: ";
   //surface.print();
@@ -191,17 +191,17 @@ auto Spp3::_find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
   auto y_end = y_end_;
   for(auto sweep_line = y_begin; sweep_line <= y_end; ++sweep_line) {
     for(auto x = x_begin; x <= x_end; ++x) {
-      auto const point = Point2(x, sweep_line);
+      auto const point = mathutils::Vector<2, int>(x, sweep_line);
       auto non_intersected = true;
       for(auto const& rectangular : rectangulars) {
         non_intersected &=
-          !nfp_.at(rectangular)->to_rectangle().is_intersected(point);
+          !nfp_.at(rectangular)->reduce_dimension().is_intersected(point);
         if(!non_intersected) break;
       }
-      if(non_intersected) return Point3(x, sweep_line, surface.z);
+      if(non_intersected) return Vector(x, sweep_line, surface.z);
     }
   }
-  return Point3(INF, INF, INF);
+  return Vector(INF, INF, INF);
 }
 
 auto Spp3::_make_nfp(RecPtr const& i, RecPtr const& j) const
@@ -214,11 +214,11 @@ auto Spp3::_make_nfp(RecPtr const& i, RecPtr const& j) const
   auto h = i->h + j->h;
   auto d = i->d + j->d;
 
-  return std::make_shared<Rectangular>(x, y, z, w, h, d);
+  return std::make_shared<Rectangular>(w, h, d, x, y, z);
 }
 
-auto Spp3::_is_avairable(Point3 const& point) const -> bool {
-  static auto const no_avairable_point = Point3(INF, INF, INF);
+auto Spp3::_is_avairable(Vector const& point) const -> bool {
+  static auto const no_avairable_point = Vector(INF, INF, INF);
   return point != no_avairable_point;
 }
 }

@@ -15,6 +15,7 @@ namespace spp {
 class Spp3 {
  private:
   using RecPtr = std::shared_ptr<Rectangular>;
+  using Vector = mathutils::Vector<3, int>;
 
  public:
   template <class RecPtrsT>
@@ -42,14 +43,14 @@ class Spp3 {
   PriorityContainer<RecPtr, NbCompare> nb_;
   int s_;
   RecPtr i_;
-  Point3 bl_;
+  Vector bl_; // Position
   unsigned int lf_;
   unsigned int lb_;
   RecPtr jf_;
   RecPtr jb_;
   int floor_;
   std::unordered_map<RecPtr, RecPtr> nfp_;
-  Point3 interim_bl_; // 暫定BL点
+  Vector interim_bl_; // 暫定BL点, Position
   int x_end_; // 容器のx座標 - wi
   int y_end_; // 容器のy座標 - hi
 
@@ -67,11 +68,11 @@ class Spp3 {
   auto _step10() -> int;
 
   auto _find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
-                   Rectangular const& surface) const -> Point3;
+                   Rectangular const& surface) const -> Vector;
   // i: 既配置, j: これから配置
   auto _make_nfp(RecPtr const& i, RecPtr const& j) const
     -> RecPtr;
-  auto _is_avairable(Point3 const& point) const -> bool;
+  auto _is_avairable(Vector const& point) const -> bool;
   // 2次元容器における容器のNFP (IFR) との交差判定
   auto _is_intersected_ifr(RecPtr const& rectangular,
                            RecPtr const& surface) const -> bool;

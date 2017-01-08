@@ -2,11 +2,33 @@
 
 #include <iostream>
 
-#include "point.hpp"
-#include "size.hpp"
-#include "rectangle.hpp"
+#include "mathutils/vector.hpp"
 
 namespace spp {
+class Rectangular : public mathutils::Polyhedron<3, int> {
+ private:
+  using Super = mathutils::Polyhedron<3, int>;
+
+ public:
+  template <class... Args>
+  Rectangular(Args&&... args);
+
+  auto operator<(Rectangular const& other) const -> bool;
+  auto operator>(Rectangular const& other) const -> bool;
+
+  auto front_surface() const -> Rectangular;
+  auto back_surface() const -> Rectangular;
+
+  int& x;
+  int& y;
+  int& z;
+  int& w;
+  int& h;
+  int& d;
+};
+}
+
+/*
 struct Rectangular : Point3, Size3 {
   Rectangular() : Point3(), Size3() {}
   Rectangular(int x, int y, int z, int w, int h, int d)
@@ -77,12 +99,11 @@ struct Rectangular : Point3, Size3 {
   }
 };
 }
+*/
 
 namespace std {
 template <>
 struct hash<spp::Rectangular> {
-  auto operator()(spp::Rectangular const& obj) const noexcept -> size_t {
-    return obj.x ^ obj.y ^ obj.z ^ obj.w ^ obj.h ^ obj.d;
-  }
+  auto operator()(spp::Rectangular const& obj) const noexcept -> size_t;
 };
 }
