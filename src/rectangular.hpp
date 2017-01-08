@@ -12,6 +12,8 @@ class Rectangular : public mathutils::Polyhedron<3, int> {
  public:
   template <class... Args>
   Rectangular(Args&&... args);
+  Rectangular(Rectangular const& other);
+  Rectangular(Rectangular&& other);
 
   auto operator=(Rectangular const& other) -> Rectangular&;
   auto operator=(Rectangular&& other) -> Rectangular&;
@@ -27,6 +29,9 @@ class Rectangular : public mathutils::Polyhedron<3, int> {
   int& w;
   int& h;
   int& d;
+
+ private:
+  auto _set_references() -> void;
 };
 }
 
