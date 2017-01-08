@@ -21,6 +21,6 @@ namespace std {
 template <>
 inline auto hash<spp::Rectangular>::
 operator()(spp::Rectangular const& obj) const noexcept -> size_t {
-  return hash<mathutils::Polyhedron<3, int>>(obj);
+  return hash<mathutils::Polyhedron<3, int>>()(obj);
 }
 }
