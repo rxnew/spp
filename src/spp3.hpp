@@ -31,7 +31,7 @@ class Spp3 {
     auto operator()(RecPtr const& lhs, RecPtr const& rhs) -> bool;
   };
 
-  static constexpr auto const INF = std::numeric_limits<int>::max() >> 1;
+  static constexpr int const INF = std::numeric_limits<int>::max() >> 1;
 
   int n_; // 直方体の数
   Rectangular container_back_surface_; // 容器の背面
