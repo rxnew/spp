@@ -114,3 +114,5 @@ struct hash<spp::Rectangular> {
   auto operator()(spp::Rectangular const& obj) const noexcept -> size_t;
 };
 }
+
+#include "rectangular/rectangular_impl.hpp"
