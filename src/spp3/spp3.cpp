@@ -11,6 +11,8 @@ auto Spp3::NbCompare::operator()(RecPtr const& lhs, RecPtr const& rhs)
   return lhs->back_surface() < rhs->back_surface();
 }
 
+constexpr auto const Spp3::INF;
+
 auto Spp3::_solve() -> void {
   auto status = _step1();
 
