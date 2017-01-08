@@ -13,6 +13,8 @@ class Rectangular : public mathutils::Polyhedron<3, int> {
   template <class... Args>
   Rectangular(Args&&... args);
 
+  auto operator=(Rectangular const& other) -> Rectangular&;
+  auto operator=(Rectangular&& other) -> Rectangular&;
   auto operator<(Rectangular const& other) const -> bool;
   auto operator>(Rectangular const& other) const -> bool;
 
