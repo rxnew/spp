@@ -1,21 +1,18 @@
 #pragma once
 
 #include <iostream>
-#include <memory>
 #include <vector>
 
-#include "rectangular.hpp"
+#include "json11.hpp"
 
 namespace spp {
-class IO {
- private:
-  using RecPtr = std::shared_ptr<Rectangular>;
-  using Rectangulars = std::vector<RecPtr>;
-
- public:
-  static auto output(Rectangular const& rectangular, int indent_count = 0,
-                     std::ostream& os = std::cout) -> void;
-  static auto output(Rectangulars const& rectangulars,
-                     std::ostream& os = std::cout) -> void;
-};
+namespace io {
+template <class T, template <class...> class U>
+auto output(std::string const& key, U<T> const& array,
+            std::ostream& os = std::cout) -> void;
+template <class... Args>
+auto to_json(Args&&... args) -> json11::Json;
 }
+}
+
+#include "io/io_impl.hpp"

@@ -42,10 +42,10 @@ auto Spp3::_step1() -> int {
   e_.clear();
   nf_.clear();
   nb_.clear();
-  auto front_ptr = std::make_shared<Rectangular>(container_front_surface_);
-  nf_.insert(front_ptr);
-  nb_.insert(front_ptr);
-  placed_.insert(front_ptr);
+  //auto front_ptr = std::make_shared<Rectangular>(container_front_surface_);
+  nf_.insert(container_front_surface_);
+  nb_.insert(container_front_surface_);
+  placed_.insert(container_front_surface_);
   s_ = 0;
   return 2;
 }
@@ -62,8 +62,8 @@ auto Spp3::_step2() -> int {
   //jb_->print();
   floor_ = 0;
   interim_bl_ = Vector(INF, INF, INF); // Position
-  x_end_ = container_back_surface_.x + container_back_surface_.w - i_->w;
-  y_end_ = container_back_surface_.y + container_back_surface_.h - i_->h;
+  x_end_ = container_back_surface_->x + container_back_surface_->w - i_->w;
+  y_end_ = container_back_surface_->y + container_back_surface_->h - i_->h;
   return 3;
 }
 
@@ -81,7 +81,7 @@ auto Spp3::_step4() -> int {
     //std::cout << nfp_[jb_]->back_surface().z << std::endl;
     //std::cout << jb_->z - i_->d << std::endl;
     //std::cout << std::endl;
-    if(nfp_[jb_]->back_surface().z < container_back_surface_.z) {
+    if(_back_surface(nfp_[jb_])->z < container_back_surface_->z) {
       return 5; // goto Step 5
     }
     else {
@@ -89,7 +89,7 @@ auto Spp3::_step4() -> int {
     }
   }
   else if(floor_ == 1) {
-    if(nfp_[jb_]->back_surface().z < nfp_[jf_]->front_surface().z) {
+    if(_back_surface(nfp_[jb_])->z < nfp_[jf_]->front_surface().z) {
       //std::cout << "goto 5" << std::endl;
       return 5; // goto Step 5
     }
@@ -116,12 +116,12 @@ auto Spp3::_step5() -> int {
 auto Spp3::_step6() -> int {
   e_.erase(jf_);
   auto ed = std::unordered_set<RecPtr>();
-  auto front = nfp_[jf_]->front_surface();
+  auto front = _front_surface(nfp_[jf_]);
   for(auto const& j : nfp_) {
     if(j.first == jf_) {
       continue;
     }
-    if(front.is_intersected(*j.second)) {
+    if(front->is_intersected(*j.second)) {
       ed.insert(j.first);
     }
   }
@@ -142,7 +142,7 @@ auto Spp3::_step6() -> int {
 auto Spp3::_step7() -> int {
   //if(_make_nfp(nf_[lf_ + 1], i_)->front_surface().get_point() < bl_) {
   if(nf_.size() <= lf_ - 1 &&
-     _make_nfp(nf_[lf_ + 1], i_)->front_surface().get_position() < bl_) {
+     _front_surface(_make_nfp(nf_[lf_ + 1], i_))->get_position() < bl_) {
     ++lf_;
     //std::cout << "lf: " << lb_ << std::endl;
     //std::cout << "jf[lf]" << std::flush;
@@ -183,13 +183,13 @@ auto Spp3::_step10() -> int {
 }
 
 auto Spp3::_find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
-                       Rectangular const& surface) const -> Vector {
+                       RecPtr const& surface) const -> Vector {
   //_print_status();
   //std::cout << "surface: ";
   //surface.print();
-  auto x_begin = std::max(container_back_surface_.x, surface.x);
-  auto y_begin = std::max(container_back_surface_.y, surface.y);
-  auto x_end = std::min(x_end_, surface.x + surface.w);
+  auto x_begin = std::max(container_back_surface_->x, surface->x);
+  auto y_begin = std::max(container_back_surface_->y, surface->y);
+  auto x_end = std::min(x_end_, surface->x + surface->w);
   auto y_end = y_end_;
   for(auto sweep_line = y_begin; sweep_line <= y_end; ++sweep_line) {
     for(auto x = x_begin; x <= x_end; ++x) {
@@ -200,7 +200,7 @@ auto Spp3::_find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
           !nfp_.at(rectangular)->reduce_dimension().is_intersected(point);
         if(!non_intersected) break;
       }
-      if(non_intersected) return Vector(x, sweep_line, surface.z);
+      if(non_intersected) return Vector(x, sweep_line, surface->z);
     }
   }
   return Vector(INF, INF, INF);

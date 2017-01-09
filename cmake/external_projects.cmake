@@ -1,13 +1,21 @@
 cmake_minimum_required(VERSION 3.2)
 
+option(SPP_BUILD_TESTS "Update external projects" off)
+
 if(NOT EXTERNAL_PROJECTS_INCLUDE_PATHS OR
-   NOT EXTERNAL_PROJECTS_LIBRARIES)
+   NOT EXTERNAL_PROJECTS_LIBRARIES OR
+   UPDATE_EXTERNAL_PROJECTS)
   if(NOT INSTALL_EXTERNAL_PROJECTS_PREFIX)
     set(INSTALL_EXTERNAL_PROJECTS_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
   endif()
 
-  include(${CMAKE_CURRENT_LIST_DIR}/find_mathutils.cmake)
-  include(${CMAKE_CURRENT_LIST_DIR}/find_json11.cmake)
+  if(UPDATE_EXTERNAL_PROJECTS)
+    include(${CMAKE_CURRENT_LIST_DIR}/mathutils.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/json11.cmake)
+  else()
+    include(${CMAKE_CURRENT_LIST_DIR}/find_mathutils.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/find_json11.cmake)
+  endif()
 
   set(EXTERNAL_PROJECTS_INCLUDE_PATHS
       ${MATHUTILS_INCLUDE_PATH}

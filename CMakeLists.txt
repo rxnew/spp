@@ -5,6 +5,7 @@ project(spp CXX)
 set(TARGET spp)
 
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)
 
 file(GLOB_RECURSE SOURCES ${SOURCE_DIR}/*.cpp)
 
@@ -33,6 +34,13 @@ install(EXPORT ${TARGET}-export
         FILE ${TARGET}-config.cmake
         DESTINATION share/cmake/${TARGET}
         EXPORT_LINK_INTERFACE_LIBRARIES)
+
+option(SPP_BUILD_TESTS "Build unit tests" off)
+
+if(SPP_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(${TEST_DIR})
+endif()
 
 set(CMAKE_CXX_FLAGS "")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")

@@ -7,8 +7,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "rectangular.hpp"
-#include "priority_container.hpp"
+#include "spp3/rectangular.hpp"
+#include "util/priority_container.hpp"
 
 namespace spp {
 // 3次元ストリップパッキング問題 (3D SPP) ソルバ
@@ -19,7 +19,16 @@ class Spp3 {
 
  public:
   template <class RecPtrsT>
+  auto solve(RecPtrsT&& rectangulars, RecPtr const& container_back_surface)
+    -> std::unordered_set<RecPtr> const&;
+  template <class RecPtrsT>
   auto solve(RecPtrsT&& rectangulars, Rectangular const& container_back_surface)
+    -> std::unordered_set<RecPtr> const&;
+  template <class RecPtrsT>
+  auto solve(RecPtrsT&& rectangulars, Rectangular&& container_back_surface)
+    -> std::unordered_set<RecPtr> const&;
+  template <class RecPtrsT>
+  auto solve(RecPtrsT&& rectangulars, Vector const& container_back_surface)
     -> std::unordered_set<RecPtr> const&;
 
  private:
@@ -34,8 +43,8 @@ class Spp3 {
   static constexpr int const INF = std::numeric_limits<int>::max() >> 1;
 
   int n_; // 直方体の数
-  Rectangular container_back_surface_; // 容器の背面
-  Rectangular container_front_surface_; // 容器の前面 (0, 0, INF)
+  RecPtr container_back_surface_; // 容器の背面
+  RecPtr container_front_surface_; // 容器の前面 (0, 0, INF)
   std::vector<RecPtr> sigma_;
   std::unordered_set<RecPtr> placed_;
   std::unordered_set<RecPtr> e_;
@@ -68,7 +77,7 @@ class Spp3 {
   auto _step10() -> int;
 
   auto _find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
-                   Rectangular const& surface) const -> Vector;
+                   RecPtr const& surface) const -> Vector;
   // i: 既配置, j: これから配置
   auto _make_nfp(RecPtr const& i, RecPtr const& j) const
     -> RecPtr;
@@ -76,17 +85,11 @@ class Spp3 {
   // 2次元容器における容器のNFP (IFR) との交差判定
   auto _is_intersected_ifr(RecPtr const& rectangular,
                            RecPtr const& surface) const -> bool;
-  auto _print_status(std::ostream& os = std::cerr) const -> void;
+  auto _front_surface(RecPtr const& rectangular) const -> RecPtr;
+  auto _back_surface(RecPtr const& rectangular) const -> RecPtr;
+  template <class... Args>
+  auto _make_ptr(Args&&... args) const -> RecPtr;
 };
+}
 
-template <class RecPtrsT>
-auto Spp3::solve(RecPtrsT&& rectangulars,
-                 Rectangular const& container_back_surface)
-  -> std::unordered_set<RecPtr> const& {
-  sigma_ = std::forward<RecPtrsT>(rectangulars);
-  container_back_surface_ = container_front_surface_ = container_back_surface;
-  container_front_surface_.z = INF;
-  _solve();
-  return placed_;
-}
-}
+#include "spp3/spp3_impl.hpp"
