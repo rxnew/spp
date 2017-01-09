@@ -2,23 +2,42 @@
 
 #include <cassert>
 #include <fstream>
-#include <memory>
-
-#include "mathutils/vector.hpp"
 
 namespace spp {
 namespace io {
 // prototype declarations
-template <class T>
-auto _get_hyperrectangles(json11::Json const& json_obj)
-  -> std::vector<std::shared_ptr<T>>;
-template <class T>
-auto _get_base(json11::Json const& json_obj) -> std::shared_ptr<T>;
+template <int dim, class Real, template <class...> class U>
+auto _input(U<mathutils::Hyperrectangle<dim, Real>>& hyperrectangles,
+            mathutils::Hyperrectangle<dim, Real>& base,
+            std::string const& filename) -> void;
+template <int dim, class Real, template <class...> class U>
+auto _input(U<std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>>&
+            hyperrectangles,
+            std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>& base,
+            std::string const& filename) -> void;
+template <int dim, class Real, template <class...> class U>
+auto _inputs(U<mathutils::Hyperrectangle<dim, Real>>& hyperrectangles,
+             mathutils::Hyperrectangle<dim, Real>& base,
+             std::string const& s) -> void;
+template <int dim, class Real, template <class...> class U>
+auto _inputs(U<std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>>&
+             hyperrectangles,
+             std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>& base,
+             std::string const& s) -> void;
+template <int dim, class Real, template <class...> class U>
+auto _from_json(U<mathutils::Hyperrectangle<dim, Real>>& hyperrectangles,
+                mathutils::Hyperrectangle<dim, Real>& base,
+                json11::Json const& json_obj) -> void;
+template <int dim, class Real, template <class...> class U>
+auto _from_json(U<mathutils::Hyperrectangle<dim, Real>>& hyperrectangles,
+                json11::Json const& json_array) -> void;
 template <int dim, class Real>
-auto _get_vector(json11::Json const& json_obj, std::string const& key)
-  -> mathutils::Vector<dim, Real>;
-template <class T, std::enable_if_t<std::is_convertible<T, json11::Json>::value,
-                                    std::nullptr_t> = nullptr>
+auto _from_json(mathutils::Hyperrectangle<dim, Real>& hyperrectangle,
+                json11::Json const& json_obj) -> void;
+template <int dim, class Real>
+auto _from_json(mathutils::Vector<dim, Real>& vector,
+                json11::Json const& json_array) -> void;
+template <class T>
 auto _to_json(T const& t) -> json11::Json;
 template <int dim, class Real, class T =
           std::conditional_t<std::is_integral<Real>::value, int, double>>
@@ -35,41 +54,26 @@ auto _to_json(std::string const& key, U<T> const& array)
   -> json11::Json;
 
 // implementations
-template <class T>
+template <int dim, class Real, template <class...> class U>
 auto open(std::string const& filename)
-  -> std::tuple<std::vector<std::shared_ptr<T>>, std::shared_ptr<T>> {
-  auto hyperrectangles = std::vector<std::shared_ptr<T>>();
-  auto base = std::shared_ptr<T>();
-  input(hyperrectangles, base, filename);
+  -> std::tuple<U<std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>>,
+     std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>> {
+  using Hyperrectangle = mathutils::Hyperrectangle<dim, Real>;
+
+  auto hyperrectangles = U<std::shared_ptr<Hyperrectangle>>();
+  auto base = std::shared_ptr<Hyperrectangle>();
+  _input(hyperrectangles, base, filename);
   return std::make_tuple(hyperrectangles, base);
 }
 
-template <class T>
-auto input(std::vector<std::shared_ptr<T>>& hyperrectangles,
-           std::shared_ptr<T>& base,
-           std::string const& filename) -> void {
-  auto ifs = std::ifstream(filename);
-
-  assert(!ifs.fail());
-
-  auto buf = std::string();
-  auto tmp = std::string();
-  while(std::getline(ifs, tmp)) buf += tmp;
-
-  ifs.close();
-
-  auto err = std::string();
-  auto json_obj = json11::Json::parse(buf, err);
-
-  input(hyperrectangles, base, json_obj);
+template <class... Args>
+auto input(Args&&... args) -> void {
+  _input(std::forward<Args>(args)...);
 }
 
-template <class T>
-auto input(std::vector<std::shared_ptr<T>>& hyperrectangles,
-           std::shared_ptr<T>& base,
-           json11::Json const& json_obj) -> void {
-  hyperrectangles = _get_hyperrectangles<T>(json_obj);
-  base = _get_base<T>(json_obj);
+template <class... Args>
+auto inputs(Args&&... args) -> void {
+  _inputs(std::forward<Args>(args)...);
 }
 
 template <class T, template <class...> class U>
@@ -85,56 +89,123 @@ auto output(U<T> const& array, std::ostream& os) -> void {
 }
 
 template <class... Args>
+auto from_json(Args&&... args) -> void {
+  return _from_json(std::forward<Args>(args)...);
+}
+
+template <class... Args>
 auto to_json(Args&&... args) -> json11::Json {
   return _to_json(std::forward<Args>(args)...);
 }
 
-template <class T>
-auto _get_hyperrectangles(json11::Json const& json_obj)
-  -> std::vector<std::shared_ptr<T>> {
-  constexpr auto const dim = T::Dimension::value;
-  using Real = typename T::Real;
+template <int dim, class Real, template <class...> class U>
+auto _input(U<mathutils::Hyperrectangle<dim, Real>>& hyperrectangles,
+            mathutils::Hyperrectangle<dim, Real>& base,
+            std::string const& filename) -> void {
+  auto ifs = std::ifstream(filename);
 
-  auto hyperrectangles = std::vector<std::shared_ptr<T>>();
-  assert(json_obj.is_object());
-  auto const& hyperrectangles_json_array = json_obj["hyperrectangles"];
-  assert(hyperrectangles_json_array.is_array());
-  for(auto const& json_obj : hyperrectangles_json_array.array_items()) {
-    auto ptr = std::make_shared<T>(_get_vector<dim, Real>(json_obj, "size"));
-    hyperrectangles.push_back(std::move(ptr));
-  }
+  assert(!ifs.fail());
 
-  return hyperrectangles;
+  auto buf = std::string();
+  auto tmp = std::string();
+  while(std::getline(ifs, tmp)) buf += tmp;
+
+  ifs.close();
+
+  auto err = std::string();
+  auto json_obj = json11::Json::parse(buf, err);
+
+  from_json(hyperrectangles, base, json_obj);
 }
 
-template <class T>
-auto _get_base(json11::Json const& json_obj) -> std::shared_ptr<T> {
-  constexpr auto const dim = T::Dimension::value;
-  using Real = typename T::Real;
+template <int dim, class Real, template <class...> class U>
+auto _input(U<std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>>&
+            hyperrectangles,
+            std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>& base,
+            std::string const& filename) -> void {
+  using Hyperrectangle = mathutils::Hyperrectangle<dim, Real>;
 
-  assert(json_obj.is_object());
-  auto const& base_json_obj = json_obj["base"];
-  assert(base_json_obj.is_object());
+  auto hyperrectangles_t = U<Hyperrectangle>();
+  auto base_t = Hyperrectangle();
+  _input(hyperrectangles_t, base_t, filename);
+  for(auto& e : hyperrectangles_t) {
+    hyperrectangles.push_back(std::make_shared<Hyperrectangle>(std::move(e)));
+  }
+  base = std::make_shared<Hyperrectangle>(std::move(base_t));
+}
 
-  return std::make_shared<T>(_get_vector<dim, Real>(base_json_obj, "size"),
-                             _get_vector<dim, Real>(base_json_obj, "position"));
+template <int dim, class Real, template <class...> class U>
+auto _inputs(U<mathutils::Hyperrectangle<dim, Real>>& hyperrectangles,
+             mathutils::Hyperrectangle<dim, Real>& base,
+             std::string const& s) -> void {
+  auto err = std::string();
+  auto json_obj = json11::Json::parse(s, err);
+  from_json(hyperrectangles, base, json_obj);
+}
+
+template <int dim, class Real, template <class...> class U>
+auto _inputs(U<std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>>&
+             hyperrectangles,
+             std::shared_ptr<mathutils::Hyperrectangle<dim, Real>>& base,
+             std::string const& s) -> void {
+  using Hyperrectangle = mathutils::Hyperrectangle<dim, Real>;
+
+  auto hyperrectangles_t = U<Hyperrectangle>();
+  auto base_t = Hyperrectangle();
+  _inputs(hyperrectangles_t, base_t, s);
+  for(auto& e : hyperrectangles_t) {
+    hyperrectangles.push_back(std::make_shared<Hyperrectangle>(std::move(e)));
+  }
+  base = std::make_shared<Hyperrectangle>(std::move(base_t));
+}
+
+template <int dim, class Real, template <class...> class U>
+auto _from_json(U<mathutils::Hyperrectangle<dim, Real>>& hyperrectangles,
+                mathutils::Hyperrectangle<dim, Real>& base,
+                json11::Json const& json_obj) -> void {
+  auto const& hyperrectangles_json_array = json_obj["hyperrectangles"];
+  auto const& base_json_obj              = json_obj["base"];
+  _from_json(hyperrectangles, hyperrectangles_json_array);
+  _from_json(base, base_json_obj);
+}
+
+template <int dim, class Real, template <class...> class U>
+auto _from_json(U<mathutils::Hyperrectangle<dim, Real>>& hyperrectangles,
+                json11::Json const& json_array) -> void {
+  if(!json_array.is_array()) return;
+  for(auto const& json_obj : json_array.array_items()) {
+    auto hyperrectangle = mathutils::Hyperrectangle<dim, Real>();
+    _from_json(hyperrectangle, json_obj);
+    hyperrectangles.push_back(std::move(hyperrectangle));
+  }
 }
 
 template <int dim, class Real>
-auto _get_vector(json11::Json const& json_obj, std::string const& key)
-  -> mathutils::Vector<dim, Real> {
-  assert(json_obj.is_object());
-  auto const& vector_json_array = json_obj[key];
-  assert(vector_json_array.is_array());
-  auto vector = mathutils::Vector<dim, Real>();
-  {
-    auto i = 0;
-    for(auto const& json_number : vector_json_array.array_items()) {
-      assert(json_number.is_number());
-      vector[i++] = static_cast<Real>(json_number.number_value());
-    }
+auto _from_json(mathutils::Hyperrectangle<dim, Real>& hyperrectangle,
+                json11::Json const& json_obj) -> void {
+  using Vector = typename mathutils::Hyperrectangle<dim, Real>::Vector;
+
+  if(!json_obj.is_object()) return;
+  auto const& size_json_array     = json_obj["size"];
+  auto const& position_json_array = json_obj["position"];
+  auto size     = Vector();
+  auto position = Vector();
+  _from_json(size    , size_json_array);
+  _from_json(position, position_json_array);
+  hyperrectangle.set_size(size);
+  hyperrectangle.set_position(position);
+}
+
+template <int dim, class Real>
+auto _from_json(mathutils::Vector<dim, Real>& vector,
+                json11::Json const& json_array) -> void {
+  if(!json_array.is_array()) return;
+  auto const& array = json_array.array_items();
+  auto const n = std::min(dim, static_cast<int>(array.size()));
+  for(auto i = 0; i < n; ++i) {
+    if(!array[i].is_number()) continue;
+    vector[i] = static_cast<Real>(array[i].number_value());
   }
-  return vector;
 }
 
 template <class T, std::enable_if_t<std::is_convertible<T, json11::Json>::value,

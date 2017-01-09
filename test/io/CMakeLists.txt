@@ -8,7 +8,7 @@ target_link_libraries(io-test
   gtest
   gtest_main
   pthread
-  spp
+  ${EXTERNAL_PROJECTS_LIBRARIES}
   )
 
 add_test(
