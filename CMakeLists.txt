@@ -24,7 +24,7 @@ foreach(TARGET ${TARGETS})
 endforeach(TARGET)
 
 install(DIRECTORY ${SOURCE_DIR}/
-        DESTINATION include/${TARGET}
+        DESTINATION include/${PROJECT_NAME}
         FILES_MATCHING PATTERN *.hpp)
 
 option(SPP_BUILD_TESTS "Build unit tests" off)
