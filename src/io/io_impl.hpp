@@ -77,8 +77,8 @@ auto inputs(Args&&... args) -> void {
 }
 
 template <class T, template <class...> class U>
-auto output(std::string const& key, U<T> const& array,
-            std::ostream& os) -> void {
+auto output(std::string const& key, U<T> const& array, std::ostream& os)
+  -> void {
   auto json_obj = to_json(key, array);
   os << json_obj.dump() << std::endl;
 }
@@ -86,6 +86,18 @@ auto output(std::string const& key, U<T> const& array,
 template <class T, template <class...> class U>
 auto output(U<T> const& array, std::ostream& os) -> void {
   output("hyperrectangles", array, os);
+}
+
+template <class T, template <class...> class U>
+auto outputs(std::string const& key, U<T> const& array, std::string& s)
+  -> void {
+  auto json_obj = to_json(key, array);
+  json_obj.dump(s);
+}
+
+template <class T, template <class...> class U>
+auto outputs(U<T> const& array, std::string& s) -> void {
+  outputs("hyperrectangles", array, s);
 }
 
 template <class... Args>

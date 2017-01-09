@@ -22,6 +22,11 @@ auto output(std::string const& key, U<T> const& array,
             std::ostream& os = std::cout) -> void;
 template <class T, template <class...> class U>
 auto output(U<T> const& array, std::ostream& os = std::cout) -> void;
+template <class T, template <class...> class U>
+auto outputs(std::string const& key, U<T> const& array, std::string& s)
+  -> void;
+template <class T, template <class...> class U>
+auto outputs(U<T> const& array, std::string& s) -> void;
 template <class... Args>
 auto from_json(Args&&... args) -> void;
 template <class... Args>
