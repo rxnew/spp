@@ -10,6 +10,10 @@ class Rectangular : public mathutils::Hyperrectangle<3, int> {
   using Super = mathutils::Hyperrectangle<3, int>;
 
  public:
+  using Dimension = std::integral_constant<int, 3>;
+  using Real = int;
+  using Vector = typename Super::Vector;
+
   template <class... Args>
   Rectangular(Args&&... args);
   Rectangular(Rectangular const& other);

@@ -5,3 +5,4 @@ include(${TEST_DIR}/gtest.cmake)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
 add_subdirectory(spp3)
+add_subdirectory(io)

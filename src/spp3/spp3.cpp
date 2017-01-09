@@ -17,8 +17,6 @@ auto Spp3::_solve() -> void {
   auto status = _step1();
 
   while(true) {
-    //std::cout << "step: " << status << std::endl;
-    //_print_status();
     switch(status) {
       case 0:  return;
       case 1:  status = _step1();  break;
@@ -42,7 +40,6 @@ auto Spp3::_step1() -> int {
   e_.clear();
   nf_.clear();
   nb_.clear();
-  //auto front_ptr = std::make_shared<Rectangular>(container_front_surface_);
   nf_.insert(container_front_surface_);
   nb_.insert(container_front_surface_);
   placed_.insert(container_front_surface_);
@@ -59,7 +56,6 @@ auto Spp3::_step2() -> int {
   lb_ = 0;
   jf_ = nf_[lf_];
   jb_ = nb_[lb_];
-  //jb_->print();
   floor_ = 0;
   interim_bl_ = Vector(INF, INF, INF); // Position
   x_end_ = container_back_surface_->x + container_back_surface_->w - i_->w;
@@ -77,10 +73,6 @@ auto Spp3::_step3() -> int {
 
 auto Spp3::_step4() -> int {
   if(floor_ == 0) {
-    //jb_->print();
-    //std::cout << nfp_[jb_]->back_surface().z << std::endl;
-    //std::cout << jb_->z - i_->d << std::endl;
-    //std::cout << std::endl;
     if(_back_surface(nfp_[jb_])->z < container_back_surface_->z) {
       return 5; // goto Step 5
     }
@@ -90,11 +82,9 @@ auto Spp3::_step4() -> int {
   }
   else if(floor_ == 1) {
     if(_back_surface(nfp_[jb_])->z < nfp_[jf_]->front_surface().z) {
-      //std::cout << "goto 5" << std::endl;
       return 5; // goto Step 5
     }
     else {
-      //std::cout << "goto 6" << std::endl;
       return 6; // goto Step 6
     }
   }
@@ -102,14 +92,10 @@ auto Spp3::_step4() -> int {
 }
 
 auto Spp3::_step5() -> int {
-  if(lb_ == placed_.size() - 1) return 6; // goto Step 6?
+  if(lb_ == placed_.size() - 1) return 6; // goto Step 6
   e_.insert(jb_);
   ++lb_;
-  //std::cout << "m: " << placed_.size() << std::endl;
-  //std::cout << "lb: " << lb_ << std::endl;
-  //std::cout << "jb[lb]" << std::flush;
   jb_ = nb_[lb_];
-  //std::cout << " accessed" << std::endl;
   return 4; // goto Step 4
 }
 
@@ -125,40 +111,24 @@ auto Spp3::_step6() -> int {
       ed.insert(j.first);
     }
   }
-  //std::cout << "i: ";
-  //i_->print();
-  //std::cout << "jf: ";
-  //jf_->print();
-  //std::cout << "NFP(jf, i): ";
-  //nfp_[jf_]->print();
   auto bl = _find_2d_bl(ed, front);
-  //bl.print();
   if(_is_avairable(bl)) interim_bl_ = std::min(interim_bl_, bl);
-  //std::cout << "interim_bl: ";
-  //interim_bl_.print();
   return 7;
 }
 
 auto Spp3::_step7() -> int {
-  //if(_make_nfp(nf_[lf_ + 1], i_)->front_surface().get_point() < bl_) {
   if(nf_.size() <= lf_ - 1 &&
      _front_surface(_make_nfp(nf_[lf_ + 1], i_))->get_position() < bl_) {
     ++lf_;
-    //std::cout << "lf: " << lb_ << std::endl;
-    //std::cout << "jf[lf]" << std::flush;
     jf_ = nf_[lf_];
-    //std::cout << " accessed" << std::endl;
     return 4; // goto Step 4
   }
   bl_ = interim_bl_;
-  //std::cout << "interim_bl: ";
-  //interim_bl_.print();
   return 9; // goto Step 9
 }
 
 auto Spp3::_step8() -> int {
   auto bl = _find_2d_bl(e_, container_back_surface_);
-  //bl.print();
   floor_ = 1;
   if(!_is_avairable(bl)) return 4; // goto Step4
   bl_ = bl;
@@ -167,14 +137,9 @@ auto Spp3::_step8() -> int {
 
 auto Spp3::_step9() -> int {
   i_->set_position(bl_);
-  //i_->print();
   placed_.insert(i_);
   nf_.insert(i_);
   nb_.insert(i_);
-  //std::cout << "nf: " << std::endl;
-  //for(auto i = 0; i < nf_.size(); i++) nf_[i]->print();
-  //std::cout << "nb: " << std::endl;
-  //for(auto i = 0; i < nb_.size(); i++) nb_[i]->print();
   return 2; // goto Step 2
 }
 
@@ -184,9 +149,6 @@ auto Spp3::_step10() -> int {
 
 auto Spp3::_find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
                        RecPtr const& surface) const -> Vector {
-  //_print_status();
-  //std::cout << "surface: ";
-  //surface.print();
   auto x_begin = std::max(container_back_surface_->x, surface->x);
   auto y_begin = std::max(container_back_surface_->y, surface->y);
   auto x_end = std::min(x_end_, surface->x + surface->w);

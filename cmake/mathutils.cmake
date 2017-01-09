@@ -5,7 +5,7 @@ include(ExternalProject)
 
 set(MATHUTILS_PROJECT_NAME mathutils)
 set(MATHUTILS_GIT_REPOSITORY https://github.com/rxnew/mathutils.git)
-set(MATHUTILS_GIT_TAG develop)
+set(MATHUTILS_GIT_TAG v1.0)
 
 ExternalProject_Add(
   ${MATHUTILS_PROJECT_NAME}

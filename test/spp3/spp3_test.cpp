@@ -1,7 +1,6 @@
 #include "gtest/gtest.h"
 
 #include "spp3.hpp"
-#include "io.hpp"
 
 using spp::Rectangular;
 using RecPtr = std::shared_ptr<Rectangular>;
