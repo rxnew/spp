@@ -1,14 +1,20 @@
 #include "../spp3.hpp"
 
+#include "mathutils/vector/util.hpp"
+
+using namespace mathutils::vector_accessors;
+
 namespace spp {
 auto Spp3::NfCompare::operator()(RecPtr const& lhs, RecPtr const& rhs)
   -> bool {
-  return lhs->front_surface() < rhs->front_surface();
+  return
+    _front_surface(lhs)->get_position() < _front_surface(rhs)->get_position();
 }
 
 auto Spp3::NbCompare::operator()(RecPtr const& lhs, RecPtr const& rhs)
   -> bool {
-  return lhs->back_surface() < rhs->back_surface();
+  return
+    _back_surface(lhs)->get_position() < _back_surface(rhs)->get_position();
 }
 
 constexpr int const Spp3::INF;
@@ -58,8 +64,10 @@ auto Spp3::_step2() -> int {
   jb_ = nb_[lb_];
   floor_ = 0;
   interim_bl_ = Vector(INF, INF, INF); // Position
-  x_end_ = container_back_surface_->x + container_back_surface_->w - i_->w;
-  y_end_ = container_back_surface_->y + container_back_surface_->h - i_->h;
+  x_end_ = get_x(*container_back_surface_) +
+    get_w(*container_back_surface_) - get_w(*i_);
+  y_end_ = get_y(*container_back_surface_) +
+    get_h(*container_back_surface_) - get_h(*i_);
   return 3;
 }
 
@@ -73,7 +81,7 @@ auto Spp3::_step3() -> int {
 
 auto Spp3::_step4() -> int {
   if(floor_ == 0) {
-    if(_back_surface(nfp_[jb_])->z < container_back_surface_->z) {
+    if(get_z(*_back_surface(nfp_[jb_])) < get_z(*container_back_surface_)) {
       return 5; // goto Step 5
     }
     else {
@@ -81,7 +89,7 @@ auto Spp3::_step4() -> int {
     }
   }
   else if(floor_ == 1) {
-    if(_back_surface(nfp_[jb_])->z < nfp_[jf_]->front_surface().z) {
+    if(get_z(*_back_surface(nfp_[jb_])) < get_z(*_front_surface(nfp_[jf_]))) {
       return 5; // goto Step 5
     }
     else {
@@ -149,9 +157,9 @@ auto Spp3::_step10() -> int {
 
 auto Spp3::_find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
                        RecPtr const& surface) const -> Vector {
-  auto x_begin = std::max(container_back_surface_->x, surface->x);
-  auto y_begin = std::max(container_back_surface_->y, surface->y);
-  auto x_end = std::min(x_end_, surface->x + surface->w);
+  auto x_begin = std::max(get_x(*container_back_surface_), get_x(*surface));
+  auto y_begin = std::max(get_y(*container_back_surface_), get_y(*surface));
+  auto x_end = std::min(x_end_, get_x(*surface) + get_w(*surface));
   auto y_end = y_end_;
   for(auto sweep_line = y_begin; sweep_line <= y_end; ++sweep_line) {
     for(auto x = x_begin; x <= x_end; ++x) {
@@ -162,7 +170,7 @@ auto Spp3::_find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
           !nfp_.at(rectangular)->reduce_dimension().is_intersected(point);
         if(!non_intersected) break;
       }
-      if(non_intersected) return Vector(x, sweep_line, surface->z);
+      if(non_intersected) return Vector(x, sweep_line, get_z(*surface));
     }
   }
   return Vector(INF, INF, INF);
@@ -170,13 +178,13 @@ auto Spp3::_find_2d_bl(std::unordered_set<RecPtr> const& rectangulars,
 
 auto Spp3::_make_nfp(RecPtr const& i, RecPtr const& j) const
   -> RecPtr {
-  auto x = i->x - j->w;
-  auto y = i->y - j->h;
-  auto z = i->z - j->d;
+  auto x = get_x(*i) - get_w(*j);
+  auto y = get_y(*i) - get_h(*j);
+  auto z = get_z(*i) - get_d(*j);
 
-  auto w = i->w + j->w;
-  auto h = i->h + j->h;
-  auto d = i->d + j->d;
+  auto w = get_w(*i) + get_w(*j);
+  auto h = get_h(*i) + get_h(*j);
+  auto d = get_d(*i) + get_d(*j);
 
   return std::make_shared<Rectangular>(w, h, d, x, y, z);
 }
@@ -184,5 +192,20 @@ auto Spp3::_make_nfp(RecPtr const& i, RecPtr const& j) const
 auto Spp3::_is_avairable(Vector const& point) const -> bool {
   static auto const no_avairable_point = Vector(INF, INF, INF);
   return point != no_avairable_point;
+}
+
+auto Spp3::_front_surface(RecPtr const& rectangular) -> RecPtr {
+  auto size = rectangular->get_size();
+  auto position = rectangular->get_position();
+  position[2] += size[2];
+  size[2] = 0;
+  return _make_ptr(std::move(size), std::move(position));
+}
+
+auto Spp3::_back_surface(RecPtr const& rectangular) -> RecPtr {
+  auto size = rectangular->get_size();
+  auto position = rectangular->get_position();
+  size[2] = 0;
+  return _make_ptr(std::move(size), std::move(position));
 }
 }

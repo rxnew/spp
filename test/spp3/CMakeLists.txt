@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
 add_executable(spp3-test
-  rectangular_test.cpp
   spp3_test.cpp
   )
 

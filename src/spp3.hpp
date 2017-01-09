@@ -19,16 +19,16 @@ class Spp3 {
 
  public:
   template <class RecPtrsT>
-  auto solve(RecPtrsT&& rectangulars, RecPtr const& container_back_surface)
+  auto solve(RecPtrsT&& rectangulars, RecPtr const& base)
     -> std::unordered_set<RecPtr> const&;
   template <class RecPtrsT>
-  auto solve(RecPtrsT&& rectangulars, Rectangular const& container_back_surface)
+  auto solve(RecPtrsT&& rectangulars, Rectangular const& base)
     -> std::unordered_set<RecPtr> const&;
   template <class RecPtrsT>
-  auto solve(RecPtrsT&& rectangulars, Rectangular&& container_back_surface)
+  auto solve(RecPtrsT&& rectangulars, Rectangular&& base)
     -> std::unordered_set<RecPtr> const&;
   template <class RecPtrsT>
-  auto solve(RecPtrsT&& rectangulars, Vector const& container_back_surface)
+  auto solve(RecPtrsT&& rectangulars, Vector const& base)
     -> std::unordered_set<RecPtr> const&;
 
  private:
@@ -85,10 +85,10 @@ class Spp3 {
   // 2次元容器における容器のNFP (IFR) との交差判定
   auto _is_intersected_ifr(RecPtr const& rectangular,
                            RecPtr const& surface) const -> bool;
-  auto _front_surface(RecPtr const& rectangular) const -> RecPtr;
-  auto _back_surface(RecPtr const& rectangular) const -> RecPtr;
+  static auto _front_surface(RecPtr const& rectangular) -> RecPtr;
+  static auto _back_surface(RecPtr const& rectangular) -> RecPtr;
   template <class... Args>
-  auto _make_ptr(Args&&... args) const -> RecPtr;
+  static auto _make_ptr(Args&&... args) -> RecPtr;
 };
 }
 
