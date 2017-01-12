@@ -22,8 +22,13 @@ constexpr Real const Spp3<Real>::INF;
 
 template <class Real>
 template <class BoxPtrsT>
-auto Spp3<Real>::solve(BoxPtrsT&& boxes, BoxPtr const& base)
+auto Spp3<Real>::solve(BoxPtrsT&& boxes, BoxPtr const& base, char axis)
   -> std::unordered_set<BoxPtr> const& {
+  if(!axis) axis = _get_axis(base);
+
+  _swap_axis(boxes, axis);
+  _swap_axis(base, axis);
+
   sigma_ = std::forward<BoxPtrsT>(boxes);
   container_back_surface_ = base;
   auto size = base->get_size();
@@ -31,28 +36,32 @@ auto Spp3<Real>::solve(BoxPtrsT&& boxes, BoxPtr const& base)
   position[2] = INF;
   container_front_surface_ = _make_ptr(size, position);
   _solve();
+
+  _swap_axis(placed_, axis);
+  _swap_axis(base, axis);
+
   return placed_;
 }
 
 template <class Real>
 template <class BoxPtrsT>
-auto Spp3<Real>::solve(BoxPtrsT&& boxes, Box const& base)
+auto Spp3<Real>::solve(BoxPtrsT&& boxes, Box const& base, char axis)
   -> std::unordered_set<BoxPtr> const& {
-  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(base));
+  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(base), axis);
 }
 
 template <class Real>
 template <class BoxPtrsT>
-auto Spp3<Real>::solve(BoxPtrsT&& boxes, Box&& base)
+auto Spp3<Real>::solve(BoxPtrsT&& boxes, Box&& base, char axis)
   -> std::unordered_set<BoxPtr> const& {
-  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(std::move(base)));
+  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(std::move(base)), axis);
 }
 
 template <class Real>
 template <class BoxPtrsT>
-auto Spp3<Real>::solve(BoxPtrsT&& boxes, Vector const& base)
+auto Spp3<Real>::solve(BoxPtrsT&& boxes, Vector const& base, char axis)
   -> std::unordered_set<BoxPtr> const& {
-  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(base));
+  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(base), axis);
 }
 
 template <class Real>
@@ -76,6 +85,53 @@ template <class Real>
 template <class... Args>
 inline auto Spp3<Real>::_make_ptr(Args&&... args) -> BoxPtr {
   return std::make_shared<Box>(std::forward<Args>(args)...);
+}
+
+template <class Real>
+auto Spp3<Real>::_get_axis(BoxPtr const& base) -> char {
+  using namespace mathutils::vector_accessors;
+
+  if(get_w(*base) == 0) return 'x';
+  if(get_h(*base) == 0) return 'y';
+  if(get_d(*base) == 0) return 'z';
+
+  assert(false);
+  return '\0';
+}
+
+template <class Real>
+auto Spp3<Real>::_swap_axis(BoxPtr const& box, char axis) -> void {
+  using namespace mathutils::vector_accessors;
+
+  if(axis == 'z') return;
+
+  auto z = get_z(*box);
+  auto d = get_d(*box);
+  if(axis == 'x') {
+    auto x = get_x(*box);
+    auto w = get_w(*box);
+    set_x(*box, z);
+    set_z(*box, x);
+    set_w(*box, d);
+    set_d(*box, w);
+  }
+  else if(axis == 'y') {
+    auto y = get_y(*box);
+    auto h = get_h(*box);
+    set_y(*box, z);
+    set_z(*box, y);
+    set_h(*box, d);
+    set_d(*box, h);
+  }
+}
+
+template <class Real>
+template <template <class...> class U>
+auto Spp3<Real>::_swap_axis(U<BoxPtr> const& boxes, char axis) -> void {
+  if(axis == 'z') return;
+  for(auto const& box : boxes) {
+    _swap_axis(box, axis);
+  }
 }
 
 template <class Real>

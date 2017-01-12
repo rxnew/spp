@@ -75,3 +75,31 @@ TEST(Spp3Test, SolveCase6) {
   EXPECT_EQ(boxes[0]->get_position(), Vector(0, 0, 0));
   EXPECT_EQ(boxes[1]->get_position(), Vector(1, 0, 0));
 }
+
+// X軸方向のストリップパッキング
+TEST(Spp3Test, SolveCase7) {
+  auto boxes = Boxes{
+    std::make_shared<Box>(1, 1, 3),
+    std::make_shared<Box>(1, 1, 2),
+    std::make_shared<Box>(1, 1, 1)
+  };
+  auto base = Box(0, 1, 3, 0, 0, 0);
+  Spp3().solve(boxes, base);
+  EXPECT_EQ(boxes[0]->get_position(), Vector(0, 0, 0));
+  EXPECT_EQ(boxes[1]->get_position(), Vector(1, 0, 0));
+  EXPECT_EQ(boxes[2]->get_position(), Vector(1, 0, 2));
+}
+
+// Y軸方向のストリップパッキング
+TEST(Spp3Test, SolveCase8) {
+  auto boxes = Boxes{
+    std::make_shared<Box>(3, 1, 1),
+    std::make_shared<Box>(2, 1, 1),
+    std::make_shared<Box>(1, 1, 1)
+  };
+  auto base = Box(3, 0, 1, 0, 0, 0);
+  Spp3().solve(boxes, base);
+  EXPECT_EQ(boxes[0]->get_position(), Vector(0, 0, 0));
+  EXPECT_EQ(boxes[1]->get_position(), Vector(0, 1, 0));
+  EXPECT_EQ(boxes[2]->get_position(), Vector(2, 1, 0));
+}
