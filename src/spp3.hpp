@@ -24,16 +24,16 @@ class Spp3 {
 
  public:
   template <class BoxPtrsT>
-  auto solve(BoxPtrsT&& boxes, BoxPtr const& base)
+  auto solve(BoxPtrsT&& boxes, BoxPtr const& base, char axis = '\0')
     -> std::unordered_set<BoxPtr> const&;
   template <class BoxPtrsT>
-  auto solve(BoxPtrsT&& boxes, Box const& base)
+  auto solve(BoxPtrsT&& boxes, Box const& base, char axis = '\0')
     -> std::unordered_set<BoxPtr> const&;
   template <class BoxPtrsT>
-  auto solve(BoxPtrsT&& boxes, Box&& base)
+  auto solve(BoxPtrsT&& boxes, Box&& base, char axis = '\0')
     -> std::unordered_set<BoxPtr> const&;
   template <class BoxPtrsT>
-  auto solve(BoxPtrsT&& boxes, Vector const& base)
+  auto solve(BoxPtrsT&& boxes, Vector const& base, char axis = '\0')
     -> std::unordered_set<BoxPtr> const&;
 
  private:
@@ -51,6 +51,10 @@ class Spp3 {
   static auto _back_surface(BoxPtr const& rectangular) -> BoxPtr;
   template <class... Args>
   static auto _make_ptr(Args&&... args) -> BoxPtr;
+  static auto _get_axis(BoxPtr const& base) -> char;
+  static auto _swap_axis(BoxPtr const& box, char axis) -> void;
+  template <template <class...> class U>
+  static auto _swap_axis(U<BoxPtr> const& boxes, char axis) -> void;
 
   auto _solve() -> void;
 
