@@ -174,16 +174,16 @@ template <class Real>
 auto Spp3<Real>::_step2() -> int {
   using namespace mathutils::vector_accessors;
 
-  if(s_ == n_) return 10; // goto Step 10
+  if(s_ == n_) return 10;
   i_ = sigma_[s_];
   ++s_;
-  bl_ = Vector(INF, INF, INF); // Position
+  bl_ = Vector(INF, INF, INF);
   lf_ = 0;
   lb_ = 0;
   jf_ = nf_[lf_];
   jb_ = nb_[lb_];
   floor_ = 0;
-  interim_bl_ = Vector(INF, INF, INF); // Position
+  interim_bl_ = Vector(INF, INF, INF);
   x_end_ = get_x(*container_back_surface_) +
     get_w(*container_back_surface_) - get_w(*i_);
   y_end_ = get_y(*container_back_surface_) +
@@ -206,18 +206,18 @@ auto Spp3<Real>::_step4() -> int {
 
   if(floor_ == 0) {
     if(get_z(*_back_surface(nfp_[jb_])) < get_z(*container_back_surface_)) {
-      return 5; // goto Step 5
+      return 5;
     }
     else {
-      return 8; // goto Step 8
+      return 8;
     }
   }
   else if(floor_ == 1) {
     if(get_z(*_back_surface(nfp_[jb_])) < get_z(*_front_surface(nfp_[jf_]))) {
-      return 5; // goto Step 5
+      return 5;
     }
     else {
-      return 6; // goto Step 6
+      return 6;
     }
   }
   return -1;
@@ -225,11 +225,11 @@ auto Spp3<Real>::_step4() -> int {
 
 template <class Real>
 auto Spp3<Real>::_step5() -> int {
-  if(lb_ == placed_.size() - 1) return 6; // goto Step 6
+  if(lb_ == placed_.size() - 1) return 6;
   e_.insert(jb_);
   ++lb_;
   jb_ = nb_[lb_];
-  return 4; // goto Step 4
+  return 4;
 }
 
 template <class Real>
@@ -237,12 +237,9 @@ auto Spp3<Real>::_step6() -> int {
   e_.erase(jf_);
   auto ed = std::unordered_set<BoxPtr>();
   auto front = _front_surface(nfp_[jf_]);
-  for(auto const& j : nfp_) {
-    if(j.first == jf_) {
-      continue;
-    }
-    if(front->is_intersected(*j.second)) {
-      ed.insert(j.first);
+  for(auto const& j : e_) {
+    if(front->is_intersected(*_make_nfp(j, i_))) {
+      ed.insert(j);
     }
   }
   auto bl = _find_2d_bl(ed, front);
@@ -252,23 +249,41 @@ auto Spp3<Real>::_step6() -> int {
 
 template <class Real>
 auto Spp3<Real>::_step7() -> int {
-  if(nf_.size() <= lf_ - 1 &&
-     _front_surface(_make_nfp(nf_[lf_ + 1], i_))->get_position() < bl_) {
+  using namespace mathutils::vector_accessors;
+
+  /**
+   * hyperrectangles: {(1, 1, 2), (1, 1, 1), (2, 1, 1)}, base: (2, 1, 0)
+   * の場合などに最後の超直方体のBL点が見つからない場合の対応
+   */
+  if(lf_ + 1 >= nf_.size()) {
+    if(_is_avairable(interim_bl_)) {
+      bl_ = interim_bl_;
+    }
+    else {
+      assert(nf_.size() > 1);
+      auto const& jf = nf_[nf_.size() - 2];
+      bl_ = Vector(get_x(*container_back_surface_),
+                   get_y(*container_back_surface_),
+                   get_z(*jf) + get_d(*jf));
+    }
+    return 9;
+  }
+  if(_front_surface(_make_nfp(nf_[lf_ + 1], i_))->get_position() < bl_) {
     ++lf_;
     jf_ = nf_[lf_];
-    return 4; // goto Step 4
+    return 4;
   }
   bl_ = interim_bl_;
-  return 9; // goto Step 9
+  return 9;
 }
 
 template <class Real>
 auto Spp3<Real>::_step8() -> int {
   auto bl = _find_2d_bl(e_, container_back_surface_);
   floor_ = 1;
-  if(!_is_avairable(bl)) return 4; // goto Step4
+  if(!_is_avairable(bl)) return 4;
   bl_ = bl;
-  return 9; // goto Step 9
+  return 9;
 }
 
 template <class Real>
@@ -277,7 +292,7 @@ auto Spp3<Real>::_step9() -> int {
   placed_.insert(i_);
   nf_.insert(i_);
   nb_.insert(i_);
-  return 2; // goto Step 2
+  return 2;
 }
 
 template <class Real>
@@ -292,15 +307,14 @@ auto Spp3<Real>::_find_2d_bl(std::unordered_set<BoxPtr> const& boxes,
 
   auto x_begin = std::max(get_x(*container_back_surface_), get_x(*surface));
   auto y_begin = std::max(get_y(*container_back_surface_), get_y(*surface));
-  auto x_end = std::min(x_end_, get_x(*surface) + get_w(*surface));
+  auto x_end = std::min(x_end_, get_x(*surface) + get_w(*surface) - get_w(*i_));
   auto y_end = y_end_;
   for(auto sweep_line = y_begin; sweep_line <= y_end; ++sweep_line) {
     for(auto x = x_begin; x <= x_end; ++x) {
-      auto const point = mathutils::Vector<2, Real>(x, sweep_line);
+      auto const position = mathutils::Vector<2, Real>(x, sweep_line);
       auto non_intersected = true;
       for(auto const& box : boxes) {
-        non_intersected &=
-          !nfp_.at(box)->reduce_dimension().is_intersected(point);
+        non_intersected &= !nfp_.at(box)->base().is_intersected(position);
         if(!non_intersected) break;
       }
       if(non_intersected) return Vector(x, sweep_line, get_z(*surface));
@@ -325,8 +339,12 @@ auto Spp3<Real>::_make_nfp(BoxPtr const& i, BoxPtr const& j) const -> BoxPtr {
 }
 
 template <class Real>
-auto Spp3<Real>::_is_avairable(Vector const& point) const -> bool {
-  static auto const no_avairable_point = Vector(INF, INF, INF);
-  return point != no_avairable_point;
+auto Spp3<Real>::_is_avairable(Vector const& position) const -> bool {
+  using namespace mathutils::vector_accessors;
+
+  return
+    get_x(position) != INF &&
+    get_y(position) != INF &&
+    get_z(position) != INF;
 }
 }

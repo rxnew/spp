@@ -73,7 +73,7 @@ class Spp3 {
                    BoxPtr const& surface) const -> Vector;
   // i: 既配置, j: これから配置
   auto _make_nfp(BoxPtr const& i, BoxPtr const& j) const -> BoxPtr;
-  auto _is_avairable(Vector const& point) const -> bool;
+  auto _is_avairable(Vector const& position) const -> bool;
   // 2次元容器における容器のNFP (IFR) との交差判定
   auto _is_intersected_ifr(BoxPtr const& rectangular,
                            BoxPtr const& surface) const -> bool;
