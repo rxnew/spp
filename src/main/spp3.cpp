@@ -10,6 +10,5 @@ auto main(int argc, char* argv[]) -> int {
   spp::Spp3<int>().solve(boxes, base);
   spp::io::output(boxes);
   assert(spp::is_strip_packed(boxes, base));
-  std::cout << spp::calculate_filling_rate(boxes, base) << std::endl;
   return 0;
 }

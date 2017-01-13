@@ -23,9 +23,8 @@ class Spp3 {
   using BoxPtr = std::shared_ptr<Box>;
 
  public:
-  template <class BoxPtrsT>
-  auto solve(BoxPtrsT&& boxes, BoxPtr const& base, char axis = '\0')
-    -> std::unordered_set<BoxPtr> const&;
+  auto solve(std::vector<BoxPtr> const& boxes, BoxPtr const& base,
+             char axis = '\0') -> std::unordered_set<BoxPtr> const&;
 
  private:
   struct NfCompare {
@@ -46,6 +45,7 @@ class Spp3 {
   static auto _swap_axis(BoxPtr const& box, char axis) -> void;
   template <template <class...> class U>
   static auto _swap_axis(U<BoxPtr> const& boxes, char axis) -> void;
+  static auto _d_sort(std::vector<BoxPtr>& boxes) -> void;
 
   auto _solve() -> void;
 

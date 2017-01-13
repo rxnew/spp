@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "mathutils/vector/util.hpp"
 
 namespace spp {
@@ -21,15 +23,15 @@ template <class Real>
 constexpr Real const Spp3<Real>::INF;
 
 template <class Real>
-template <class BoxPtrsT>
-auto Spp3<Real>::solve(BoxPtrsT&& boxes, BoxPtr const& base, char axis)
-  -> std::unordered_set<BoxPtr> const& {
+auto Spp3<Real>::solve(std::vector<BoxPtr> const& boxes, BoxPtr const& base,
+                       char axis) -> std::unordered_set<BoxPtr> const& {
   if(!axis) axis = _get_axis(base);
 
   _swap_axis(boxes, axis);
   _swap_axis(base, axis);
 
-  sigma_ = std::forward<BoxPtrsT>(boxes);
+  sigma_ = boxes;
+  _d_sort(sigma_);
   container_back_surface_ = base;
   auto size = base->get_size();
   auto position = base->get_position();
@@ -111,6 +113,16 @@ auto Spp3<Real>::_swap_axis(U<BoxPtr> const& boxes, char axis) -> void {
   for(auto const& box : boxes) {
     _swap_axis(box, axis);
   }
+}
+
+template <class Real>
+auto Spp3<Real>::_d_sort(std::vector<BoxPtr>& boxes) -> void {
+  using namespace mathutils::vector_accessors;
+
+  auto comp = [](auto const& lhs, auto const& rhs) {
+    return get_d(*lhs) > get_d(*rhs);
+  };
+  std::sort(std::begin(boxes), std::end(boxes), comp);
 }
 
 template <class Real>
