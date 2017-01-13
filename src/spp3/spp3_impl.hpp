@@ -44,27 +44,6 @@ auto Spp3<Real>::solve(BoxPtrsT&& boxes, BoxPtr const& base, char axis)
 }
 
 template <class Real>
-template <class BoxPtrsT>
-auto Spp3<Real>::solve(BoxPtrsT&& boxes, Box const& base, char axis)
-  -> std::unordered_set<BoxPtr> const& {
-  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(base), axis);
-}
-
-template <class Real>
-template <class BoxPtrsT>
-auto Spp3<Real>::solve(BoxPtrsT&& boxes, Box&& base, char axis)
-  -> std::unordered_set<BoxPtr> const& {
-  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(std::move(base)), axis);
-}
-
-template <class Real>
-template <class BoxPtrsT>
-auto Spp3<Real>::solve(BoxPtrsT&& boxes, Vector const& base, char axis)
-  -> std::unordered_set<BoxPtr> const& {
-  return solve(std::forward<BoxPtrsT>(boxes), _make_ptr(base), axis);
-}
-
-template <class Real>
 auto Spp3<Real>::_front_surface(BoxPtr const& box) -> BoxPtr {
   auto size = box->get_size();
   auto position = box->get_position();

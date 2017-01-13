@@ -26,15 +26,6 @@ class Spp3 {
   template <class BoxPtrsT>
   auto solve(BoxPtrsT&& boxes, BoxPtr const& base, char axis = '\0')
     -> std::unordered_set<BoxPtr> const&;
-  template <class BoxPtrsT>
-  auto solve(BoxPtrsT&& boxes, Box const& base, char axis = '\0')
-    -> std::unordered_set<BoxPtr> const&;
-  template <class BoxPtrsT>
-  auto solve(BoxPtrsT&& boxes, Box&& base, char axis = '\0')
-    -> std::unordered_set<BoxPtr> const&;
-  template <class BoxPtrsT>
-  auto solve(BoxPtrsT&& boxes, Vector const& base, char axis = '\0')
-    -> std::unordered_set<BoxPtr> const&;
 
  private:
   struct NfCompare {
