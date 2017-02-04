@@ -9,6 +9,6 @@ auto main(int argc, char* argv[]) -> int {
   auto& base = std::get<1>(input_data);
   spp::Spp3<int>().solve(boxes, base);
   spp::io::output(boxes);
-  assert(spp::is_strip_packed(boxes, base));
+  //assert(spp::is_strip_packed(boxes, base));
   return 0;
 }
